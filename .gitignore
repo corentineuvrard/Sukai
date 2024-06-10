@@ -1,0 +1,5 @@
+# Ignore the virtual environment directory
+sukai_backend/venv/
+
+# Ignore Python cache files
+sukai_backend/__pycache__/
