@@ -19,15 +19,64 @@ class Sudoku:
         - grid: 9x9 NumPy array representing the Sudoku grid.
         """
         self.grid = grid
+        self.solved_grid = None
+        self.rows = [set() for _ in range(9)]
+        self.cols = [set() for _ in range(9)]
+        self.subgrids = [set() for _ in range(9)]
+
+        for r in range(9):
+            for c in range(9):
+                num = grid[r, c]
+                if num > 0:
+                    self.rows[r].add(num)
+                    self.cols[c].add(num)
+                    self.subgrids[(r // 3) * 3 + (c // 3)].add(num)
+
+        self.precompute_solution()
 
 
-    def solve(self) -> np.ndarray:
+    def precompute_solution(self) -> None:
+        """
+        Precompute the solution of the Sudoku problem.
+        """
+        self.solved_grid = self.grid.copy()
+        if not self.solve(self.solved_grid):
+            self.solved_grid = None
+
+
+    def solve(self, grid: np.ndarray) -> bool:
         """
         Solve the Sudoku puzzle.
         
+        Args:
+        - A 9x9 NumPy array representing the Sudoku grid to be solved.
+
         Returns:
-        - A 9x9 NumPy array representing the solved Sudoku grid."""
-        pass
+        - True: If the puzzle is solved.
+        - False: If the puzzle is not solved.
+        """
+        empty_cell = self.find_empty_cell()
+        if empty_cell is None:
+            return True
+        
+        row, col = empty_cell
+        for num in range(1, 10):
+            if self.is_valid(row, col, num):
+                grid[row, col] = num
+                self.rows[row].add(num)
+                self.cols[col].add(num)
+                self.subgrids[(row // 3) * 3 + (col // 3)].add(num)
+
+                if self.solve(grid):
+                    return True
+
+                # Backtrack
+                grid[row, col] = 0
+                self.rows[row].remove(num)
+                self.cols[col].remove(num)
+                self.subgrids[(row // 3) * 3 + (col // 3)].remove(num)
+
+        return False
 
 
     def is_valid(self, row: int, col: int, num: int) -> bool:
@@ -43,19 +92,11 @@ class Sudoku:
         - True: If the grid state is valid.
         - False: If the grid state is not valid.
         """
-        
-        # Check that the number is not already in the current row
-        if num in self.grid[row, :]:
+        if num in self.rows[row]:
             return False
-        
-        # Check that the number is not already in the current column
-        if num in self.grid[:, col]:
+        if num in self.cols[col]:
             return False
-        
-        # Check that the number is not already in the current subgrid
-        start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-        subgrid = self.grid[start_row:start_row + 3, start_col:start_col + 3]
-        if num in subgrid:
+        if num in self.subgrids[(row // 3) * 3 + (col // 3)]:
             return False
         
         return True
@@ -66,5 +107,11 @@ class Sudoku:
         Find the next empty cell on the Sudoku grid.
         
         Returns:
-        - A tuple containing the coordinates (row, col) of the empty cell."""
-        pass
+        - A tuple containing the coordinates (row, col) of the empty cell.
+        """
+        for row in range(9):
+            for col in range(9):
+                if self.grid[row, col] == 0:
+                    return (row, col)
+        
+        return None
