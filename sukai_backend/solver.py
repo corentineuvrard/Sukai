@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 class Sudoku:
@@ -7,7 +7,11 @@ class Sudoku:
     Class representing a Sudoku puzzle.
     
     Attributes:
-    - grid: 9x9 NumPy array representing the Sudoku grid.
+    - grid (np.ndarray): 9x9 NumPy array representing the Sudoku grid.
+    - solved_grid (Optional[np.ndarray]): A 9x9 NumPy array representing the solved Sudoku grid, or None if unsolvable or not yet computed.
+    - rows (list[set[int]]): List of sets to track numbers in each row.
+    - cols (list[set[int]]): List of sets to track numbers in each column.
+    - subgrids (list[set[int]]): List of sets to track numbers in each 3x3 subgrid.
     """
     
 
@@ -16,13 +20,13 @@ class Sudoku:
         Initialize a Sudoku puzzle with the given grid.
         
         Args:
-        - grid: 9x9 NumPy array representing the Sudoku grid.
+        - grid (np.ndarray): 9x9 NumPy array representing the Sudoku grid.
         """
-        self.grid = grid
-        self.solved_grid = None
-        self.rows = [set() for _ in range(9)]
-        self.cols = [set() for _ in range(9)]
-        self.subgrids = [set() for _ in range(9)]
+        self.grid: np.ndarray = grid
+        self.solved_grid: Optional[np.ndarray] = None
+        self.rows: list[set[int]] = [set() for _ in range(9)]
+        self.cols: list[set[int]] = [set() for _ in range(9)]
+        self.subgrids: list[set[int]] = [set() for _ in range(9)]
 
         for r in range(9):
             for c in range(9):
@@ -49,13 +53,12 @@ class Sudoku:
         Solve the Sudoku puzzle.
         
         Args:
-        - A 9x9 NumPy array representing the Sudoku grid to be solved.
+        - grid (np.ndarray): A 9x9 NumPy array representing the Sudoku grid to be solved.
 
         Returns:
-        - True: If the puzzle is solved.
-        - False: If the puzzle is not solved.
+        - bool: True if the puzzle is solved, False otherwise.
         """
-        empty_cell = self.find_empty_cell()
+        empty_cell = self.find_empty_cell(grid)
         if empty_cell is None:
             return True
         
@@ -81,16 +84,15 @@ class Sudoku:
 
     def is_valid(self, row: int, col: int, num: int) -> bool:
         """
-        Check if the current grid state is valid after placing 'num' at position ('row', 'col').
+        Check if the placement of 'num' at position ('row', 'col') is valid.
 
         Args:
-        - row: Row index.
-        - col: Column index.
-        - num: Number to be placed.
+        - row (int): Row index.
+        - col (int): Column index.
+        - num (int): Number to be placed.
 
         Returns:
-        - True: If the grid state is valid.
-        - False: If the grid state is not valid.
+        - bool: True if the placement is valid, False otherwise.
         """
         if num in self.rows[row]:
             return False
@@ -102,16 +104,19 @@ class Sudoku:
         return True
 
         
-    def find_empty_cell(self) -> Tuple[int, int]:
+    def find_empty_cell(self, grid: np.ndarray) -> Optional[Tuple[int, int]]:
         """
         Find the next empty cell on the Sudoku grid.
+
+        Args:
+        - grid (np.ndarray): A 9x9 NumPy array representing the Sudoku grid.
         
         Returns:
-        - A tuple containing the coordinates (row, col) of the empty cell.
+        - Optional[Tuple[int, int]]: A tuple containing the coordinates (row, col) of the empty cell.
         """
         for row in range(9):
             for col in range(9):
-                if self.grid[row, col] == 0:
+                if grid[row, col] == 0:
                     return (row, col)
-        
+
         return None
